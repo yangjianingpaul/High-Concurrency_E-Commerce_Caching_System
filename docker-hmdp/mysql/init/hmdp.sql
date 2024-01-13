@@ -17,6 +17,11 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- 导出 hmdp 的数据库结构
+DROP DATABASE IF EXISTS `hmdp`;
+CREATE DATABASE IF NOT EXISTS `hmdp` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `hmdp`;
+
 -- ----------------------------
 -- Table structure for tb_blog
 -- ----------------------------
