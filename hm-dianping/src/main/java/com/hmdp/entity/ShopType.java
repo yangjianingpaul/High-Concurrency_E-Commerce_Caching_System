@@ -11,14 +11,6 @@ import lombok.experimental.Accessors;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-/**
- * <p>
- * 
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
- */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
@@ -28,34 +20,34 @@ public class ShopType implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 主键
+     * primary key
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 类型名称
+     * name of type
      */
     private String name;
 
     /**
-     * 图标
+     * icon
      */
     private String icon;
 
     /**
-     * 顺序
+     * order
      */
     private Integer sort;
 
     /**
-     * 创建时间
+     * create time
      */
     @JsonIgnore
     private LocalDateTime createTime;
 
     /**
-     * 更新时间
+     * update time
      */
     @JsonIgnore
     private LocalDateTime updateTime;

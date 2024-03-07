@@ -21,12 +21,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * <p>
- * 服务实现类
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
+ * service implementation class
  */
 @Service
 public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> implements IFollowService {
@@ -39,7 +34,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     public Result follow(Long followUserId, Boolean isFollow) {
         Long userId = UserHolder.getUser().getId();
         String key = "follows:" + userId;
-//        判断关注取关
+//        judgment concern and removal
         if (isFollow) {
             Follow follow = new Follow();
             follow.setUserId(userId);
@@ -66,17 +61,17 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     }
 
     /**
-     * 共同关注
+     * common concern
      *
      * @param id
      * @return
      */
     @Override
     public Result followCommons(Long id) {
-//        获取当前用户
+//        get current user
         Long userId = UserHolder.getUser().getId();
         String key = "follows:" + userId;
-//        求交集
+//        find intersection
         String key2 = "follows:" + id;
         Set<String> intersect = stringRedisTemplate.opsForSet().intersect(key, key2);
         if (intersect == null || intersect.isEmpty()) {

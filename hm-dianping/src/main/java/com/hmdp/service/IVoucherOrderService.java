@@ -5,12 +5,7 @@ import com.hmdp.entity.VoucherOrder;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
- * <p>
- *  服务类
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
+ * service class
  */
 public interface IVoucherOrderService extends IService<VoucherOrder> {
 
@@ -18,8 +13,8 @@ public interface IVoucherOrderService extends IService<VoucherOrder> {
 
     /**
      *
-     * 1.一人一单
-     * 基于redis分布式锁
+     * 1.one person one order
+     * based on redis distributed lock
      *
      * @param voucherId
      * @return
@@ -28,7 +23,7 @@ public interface IVoucherOrderService extends IService<VoucherOrder> {
 
 
     /**
-     * 2.阻塞式队列异步处理订单/3.redis stream流消息队列实现异步秒杀
+     * 2.blocking queue processes orders asynchronously/3.Redis stream message queue implements asynchronous flash killing
      *
      * @param voucherOrder
      */

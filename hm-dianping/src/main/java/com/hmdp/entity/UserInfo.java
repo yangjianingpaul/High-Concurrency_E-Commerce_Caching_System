@@ -11,14 +11,6 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/**
- * <p>
- * 
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-24
- */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
@@ -28,58 +20,58 @@ public class UserInfo implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 主键，用户id
+     * primary key，user id
      */
     @TableId(value = "user_id", type = IdType.AUTO)
     private Long userId;
 
     /**
-     * 城市名称
+     * city name
      */
     private String city;
 
     /**
-     * 个人介绍，不要超过128个字符
+     * personal introduction no more than 128 characters
      */
     private String introduce;
 
     /**
-     * 粉丝数量
+     * number of fans
      */
     private Integer fans;
 
     /**
-     * 关注的人的数量
+     * number of people following
      */
     private Integer followee;
 
     /**
-     * 性别，0：男，1：女
+     * gender 0 male 1 female
      */
     private Boolean gender;
 
     /**
-     * 生日
+     * birthday
      */
     private LocalDate birthday;
 
     /**
-     * 积分
+     * integral
      */
     private Integer credits;
 
     /**
-     * 会员级别，0~9级,0代表未开通会员
+     * Membership level, 0~9, 0 represents unactivated membership
      */
     private Boolean level;
 
     /**
-     * 创建时间
+     * creation time
      */
     private LocalDateTime createTime;
 
     /**
-     * 更新时间
+     * update time
      */
     private LocalDateTime updateTime;
 

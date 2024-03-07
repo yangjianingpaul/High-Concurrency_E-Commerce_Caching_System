@@ -34,12 +34,7 @@ import static com.hmdp.utils.RedisConstants.*;
 import static com.hmdp.utils.SystemConstants.USER_NICK_NAME_PREFIX;
 
 /**
- * <p>
- * 服务实现类
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
+ * service’s implement class
  */
 @Service
 @Slf4j
@@ -50,25 +45,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     @Override
     public Result sendCode(String phone, HttpSession session) {
-//        1。校验手机号
+//        1.verify the mobile phone number
         if (RegexUtils.isPhoneInvalid(phone)) {
-            return Result.fail("手机号格式错误！");
+            return Result.fail("The phone number is in the wrong format！");
         }
-//        2。如果不符合，返回错误信息
-//        3。符合，生成验证码
+//        2.if not an error message is returned
+//        3.yes, a verification code will be generated
         String code = RandomUtil.randomNumbers(6);
-//        4。保存验证码到session
+//        4.save the verification code to session
 //        session.setAttribute("code", code);
-//        4.保存到redis中
+//        4.save to redis
         stringRedisTemplate.opsForValue().set(LOGIN_CODE_KEY + phone, code, LOGIN_CODE_TTL, TimeUnit.MINUTES);
-//        5。发送验证码
-        log.debug("发送短信验证码成功，验证码：{}", code);
-//        返回ok
+//        5。send a verification code
+        log.debug("the sms verification code was successfully sent，captcha：{}", code);
+//        return ok
         return Result.ok();
     }
 
     /**
-     * 登陆功能
+     * login function
      *
      * @param loginForm
      * @param session
@@ -76,27 +71,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public Result login(LoginFormDTO loginForm, HttpSession session) {
-//        1。校验手机号
+//        1。verify the mobile phone number
         String phone = loginForm.getPhone();
         if (RegexUtils.isPhoneInvalid(phone)) {
-            return Result.fail("手机号格式错误");
+            return Result.fail("the phone number is in the wrong format");
         }
-//        2。校验验证码
+//        2。verify the verification code
         Object cacheCode = stringRedisTemplate.opsForValue().get(LOGIN_CODE_KEY + phone);
         String code = loginForm.getCode();
-        //        3。不一致，报错
+        //        3。inconsistencies, error reports
         if (cacheCode == null || !cacheCode.toString().equals(code)) {
-            return Result.fail("验证码错误");
+            return Result.fail("the verification code is incorrect");
         }
-//        4。一致，根据手机号查询用户
+//        4。Consistently, query users based on their mobile phone number
         User user = query().eq("phone", phone).one();
-//        5。判断用户是否存在
-//        6。不存在，创建新用户并保存
+//        5。determine whether a user exists
+//        6。does not exist create a new user and save
         if (user == null) {
             createUserWithPhone(phone);
         }
-//        7。保存用户信息到session中
-//        保存用户信息到redis
+//        7。save the user information to the session
+//        save the user information to redis
         String token = UUID.randomUUID().toString(true);
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
         Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
@@ -111,69 +106,69 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     /**
-     * 签到功能
+     * check in function
      *
      * @return
      */
     @Override
     public Result sign() {
-//        获取当前登陆的用户
+//        get the currently logged in user
         Long userId = UserHolder.getUser().getId();
-//        获取日期
+//        get the date
         LocalDateTime now = LocalDateTime.now();
-//        拼接key
+//        concatenate the key
         String keySuffix = now.format(DateTimeFormatter.ofPattern("yyyyMM"));
         String key = "sign:" + userId + keySuffix;
-//        获取今天是本月的第几天
+//        get today is the first day of the month
         int dayOfMonth = now.getDayOfMonth();
-//        写入redis setbit key offset 1
+//        write in redis setbit key offset 1
         stringRedisTemplate.opsForValue().setBit(key, dayOfMonth-1,true);
         return Result.ok();
     }
 
     /**
-     * 签到统计
+     * check in statistics
      *
      * @return
      */
     @Override
     public Result signCount() {
-//        获取本月今天为止的所有签到记录
+//        Get all the check-in records for the month so far today
         Long userId = UserHolder.getUser().getId();
-//        获取日期
+//        get the date
         LocalDateTime now = LocalDateTime.now();
-//        拼接key
+//        concatenate the key
         String keySuffix = now.format(DateTimeFormatter.ofPattern("yyyyMM"));
         String key = "sign:" + userId + keySuffix;
-//        获取今天是本月的第几天
+//        get today is the first day of the month
         int dayOfMonth = now.getDayOfMonth();
-//        获取本月截至今天为止的所有的签到记录，返回的是一个十进制的数字
+//        Get all the check-in records for the month up to today, and return a decimal number
         List<Long> result = stringRedisTemplate.opsForValue().bitField(key,
                 BitFieldSubCommands.create().
                         get(BitFieldSubCommands.BitFieldType.unsigned(dayOfMonth)).
                         valueAt(0));
 
         if (result == null || result.isEmpty()) {
-//            没有任何签到结果
+//            there were no check in results
             return Result.ok(0);
         }
         Long num = result.get(0);
         if (num == null || num == 0) {
             return Result.ok(0);
         }
-//        循环遍历
+//        loop traversal
         int count = 0;
         while (true) {
-//        让这个数字与1做与运算，得到数字的最后一个bit位，
-//        判断这个bit位是否为0
+//        Let this number be compared with 1 to get the last bit of the number,
+//        determine whether the bit is 0
             if ((num & 1) == 0) {
-//                如果为0，说明未签到，结束
+//                If it is 0, it means that you have not checked in and it is over
                 break;
             } else {
-//        如果不为0，说明已签到，计数器+1
+//        If it is not 0, it means that it is checked in, and the counter is +1
                 count++;
             }
-//        把数字右移一位，抛弃最后一个bit位，继续下一个bit位
+//        Shift the number to the right by one bit, discard the last bit, and move on to the next bit
             num >>>= 1;
         }
         return Result.ok(count);

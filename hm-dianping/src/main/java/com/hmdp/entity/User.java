@@ -10,14 +10,6 @@ import lombok.experimental.Accessors;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-/**
- * <p>
- * 
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
- */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
@@ -27,38 +19,38 @@ public class User implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 主键
+     * primary key
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 手机号码
+     * mobile phone number
      */
     private String phone;
 
     /**
-     * 密码，加密存储
+     * passwords encrypted storage
      */
     private String password;
 
     /**
-     * 昵称，默认是随机字符
+     * nickname which is a random character by default
      */
     private String nickName;
 
     /**
-     * 用户头像
+     * user avatar
      */
     private String icon = "";
 
     /**
-     * 创建时间
+     * creation time
      */
     private LocalDateTime createTime;
 
     /**
-     * 更新时间
+     * Updated
      */
     private LocalDateTime updateTime;
 

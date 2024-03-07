@@ -12,12 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 
 /**
- * <p>
- * 前端控制器
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
+ * front controller
  */
 @RestController
 @RequestMapping("/shop")
@@ -27,10 +22,10 @@ public class ShopController {
     public IShopService shopService;
 
     /**
-     * 根据id查询商铺信息
+     * query store information based on id
      *
-     * @param id 商铺id
-     * @return 商铺详情数据
+     * @param id store id
+     * @return store details data
      */
     @GetMapping("/{id}")
     public Result queryShopById(@PathVariable("id") Long id) {
@@ -38,37 +33,37 @@ public class ShopController {
     }
 
     /**
-     * 新增商铺信息
+     * add store information
      *
-     * @param shop 商铺数据
-     * @return 商铺id
+     * @param shop store data
+     * @return store id
      */
     @PostMapping
     public Result saveShop(@RequestBody Shop shop) {
-        // 写入数据库
+        // write to database
         shopService.save(shop);
-        // 返回店铺id
+        // return store id
         return Result.ok(shop.getId());
     }
 
     /**
-     * 更新商铺信息
+     * update store information
      *
-     * @param shop 商铺数据
+     * @param shop store data
      * @return 无
      */
     @PutMapping
     public Result updateShop(@RequestBody Shop shop) {
-        // 写入数据库
+        // write to database
         return shopService.update(shop);
     }
 
     /**
-     * 根据商铺类型分页查询商铺信息
+     * Query store information by page according to store type
      *
-     * @param typeId  商铺类型
-     * @param current 页码
-     * @return 商铺列表
+     * @param typeId  shop type
+     * @param current page number
+     * @return store list
      */
     @GetMapping("/of/type")
     public Result queryShopByType(
@@ -82,22 +77,22 @@ public class ShopController {
     }
 
     /**
-     * 根据商铺名称关键字分页查询商铺信息
+     * Query store information by page based on store name keywords
      *
-     * @param name    商铺名称关键字
-     * @param current 页码
-     * @return 商铺列表
+     * @param name    store name keywords
+     * @param current page number
+     * @return store list
      */
     @GetMapping("/of/name")
     public Result queryShopByName(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "current", defaultValue = "1") Integer current
     ) {
-        // 根据类型分页查询
+        // paging query based on type
         Page<Shop> page = shopService.query()
                 .like(StrUtil.isNotBlank(name), "name", name)
                 .page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
-        // 返回数据
+        // return data
         return Result.ok(page.getRecords());
     }
 }

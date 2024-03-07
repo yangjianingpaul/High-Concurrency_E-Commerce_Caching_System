@@ -11,14 +11,6 @@ import lombok.experimental.Accessors;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-/**
- * <p>
- * 
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
- */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
@@ -28,76 +20,76 @@ public class Voucher implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 主键
+     * primary key
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 商铺id
+     * store id
      */
     private Long shopId;
 
     /**
-     * 代金券标题
+     * voucher title
      */
     private String title;
 
     /**
-     * 副标题
+     * subtitle
      */
     private String subTitle;
 
     /**
-     * 使用规则
+     * usage rules
      */
     private String rules;
 
     /**
-     * 支付金额
+     * payment amount
      */
     private Long payValue;
 
     /**
-     * 抵扣金额
+     * deduction amount
      */
     private Long actualValue;
 
     /**
-     * 优惠券类型
+     * coupon type
      */
     private Integer type;
 
     /**
-     * 优惠券类型
+     * coupon type
      */
     private Integer status;
     /**
-     * 库存
+     * stock
      */
     @TableField(exist = false)
     private Integer stock;
 
     /**
-     * 生效时间
+     * effective time
      */
     @TableField(exist = false)
     private LocalDateTime beginTime;
 
     /**
-     * 失效时间
+     * expiration time
      */
     @TableField(exist = false)
     private LocalDateTime endTime;
 
     /**
-     * 创建时间
+     * creation time
      */
     private LocalDateTime createTime;
 
 
     /**
-     * 更新时间
+     * update time
      */
     private LocalDateTime updateTime;
 

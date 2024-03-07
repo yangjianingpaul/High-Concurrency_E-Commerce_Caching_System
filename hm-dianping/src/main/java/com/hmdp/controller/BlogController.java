@@ -16,12 +16,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 /**
- * <p>
- * 前端控制器
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
+ * front controller
  */
 @RestController
 @RequestMapping("/blog")
@@ -37,18 +32,18 @@ public class BlogController {
 
     @PutMapping("/like/{id}")
     public Result likeBlog(@PathVariable("id") Long id) {
-        // 修改点赞数量
+        // modify the number of likes
         return blogService.likeBlog(id);
     }
 
     @GetMapping("/of/me")
     public Result queryMyBlog(@RequestParam(value = "current", defaultValue = "1") Integer current) {
-        // 获取登录用户
+        // get logged in user
         UserDTO user = UserHolder.getUser();
-        // 根据用户查询
+        // based on user query
         Page<Blog> page = blogService.query()
                 .eq("user_id", user.getId()).page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
-        // 获取当前页数据
+        // get current page data
         List<Blog> records = page.getRecords();
         return Result.ok(records);
     }
@@ -72,16 +67,16 @@ public class BlogController {
     public Result queryBlogByUserId(
             @RequestParam(value = "current", defaultValue = "1") Integer current,
             @RequestParam("id") Long id) {
-        // 根据用户查询
+        // based on user query
         Page<Blog> page = blogService.query()
                 .eq("user_id", id).page(new Page<>(current, SystemConstants.MAX_PAGE_SIZE));
-        // 获取当前页数据
+        // get current page data
         List<Blog> records = page.getRecords();
         return Result.ok(records);
     }
 
     /**
-     * 笔记推送
+     * note push
      *
      * @param max
      * @param offset

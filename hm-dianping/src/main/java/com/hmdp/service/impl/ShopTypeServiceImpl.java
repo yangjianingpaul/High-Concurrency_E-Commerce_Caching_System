@@ -20,12 +20,7 @@ import java.util.concurrent.TimeUnit;
 import static com.hmdp.utils.RedisConstants.*;
 
 /**
- * <p>
- * 服务实现类
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
+ * service's implement class
  */
 @Service
 public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> implements IShopTypeService {
@@ -45,7 +40,7 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
 
         List<ShopType> shopTypeList = query().orderByAsc("sort").list();
         if (shopTypeList == null) {
-            return Result.fail("商铺信息不存在");
+            return Result.fail("The shop's message doesn't exist.");
         }
         stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(shopTypeList));
         return Result.ok(shopTypeList);

@@ -11,14 +11,6 @@ import lombok.experimental.Accessors;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-/**
- * <p>
- * 
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
- */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
@@ -28,66 +20,66 @@ public class Blog implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 主键
+     * primary key
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
     /**
-     * 商户id
+     * shop id
      */
     private Long shopId;
     /**
-     * 用户id
+     * user id
      */
     private Long userId;
     /**
-     * 用户图标
+     * user icon
      */
     @TableField(exist = false)
     private String icon;
     /**
-     * 用户姓名
+     * user name
      */
     @TableField(exist = false)
     private String name;
     /**
-     * 是否点赞过了
+     * weather like
      */
     @TableField(exist = false)
     private Boolean isLike;
 
     /**
-     * 标题
+     * title
      */
     private String title;
 
     /**
-     * 探店的照片，最多9张，多张以","隔开
+     * shop photo，max:9，different photo use "," separated
      */
     private String images;
 
     /**
-     * 探店的文字描述
+     * shop description
      */
     private String content;
 
     /**
-     * 点赞数量
+     * the amount of likes
      */
     private Integer liked;
 
     /**
-     * 评论数量
+     * the amount of comment
      */
     private Integer comments;
 
     /**
-     * 创建时间
+     * created time
      */
     private LocalDateTime createTime;
 
     /**
-     * 更新时间
+     * update time
      */
     private LocalDateTime updateTime;
 

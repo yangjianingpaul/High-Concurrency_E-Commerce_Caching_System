@@ -40,25 +40,25 @@ public class CacheClient {
 
     public <R, ID> R queryWithPassThrough(String keyPrefix, ID id, Class<R> type, Function<ID, R> dbFallback) {
         String key = keyPrefix + id;
-//        1。从redis查询商铺缓存
+//        1。query store cache from redis
         String json = stringRedisTemplate.opsForValue().get(key);
-//        2。判断是否存在
+//        2。determine whether there is
         if (StrUtil.isNotBlank(json)) {
-//        3。存在，直接返回
+//        3。exists return directly
             return JSONUtil.toBean(json, type);
         }
-//        判断命中的是否是空值
+//        determine whether the hit is a null value
         if (json != null) {
             return null;
         }
-//        4。不存在，根据id查询数据库
+//        4。does not exist query the database based on id
         R r = dbFallback.apply(id);
-//        5。不存在，返回错误
+//        5。does not exist returns error
         if (r == null) {
             stringRedisTemplate.opsForValue().set(key, "", CACHE_NULL_TTL, TimeUnit.MINUTES);
             return null;
         }
-//        6。存在，写入redis
+//        6。exists written to redis
         stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(r), CACHE_SHOP_TTL, TimeUnit.MINUTES);
         return r;
     }
@@ -68,31 +68,31 @@ public class CacheClient {
     public <R, ID> R queryWithLogicalExpire(
             String keyPrefix, ID id, Class<R> type, Function<ID, R> dbFallback, Long time, TimeUnit unit) {
         String key = keyPrefix + id;
-//        1。从redis查询商铺缓存
+//        1。query store cache from redis
         String json = stringRedisTemplate.opsForValue().get(key);
-//        2。判断是否存在
+//        2。determine whether there is
         if (StrUtil.isBlank(json)) {
             return null;
         }
 
-//        命中，需要先把json反序列化为对象
+//        Hit, you need to deserialize json into an object first
         RedisData redisData = JSONUtil.toBean(json, RedisData.class);
         JSONObject data = (JSONObject) redisData.getData();
         R r = JSONUtil.toBean(data, type);
         LocalDateTime expireTime = redisData.getExpireTime();
-//        判断是否过期
+//        determine whether it has expired
         if (expireTime.isAfter(LocalDateTime.now())) {
-            //        未过期直接返回店铺信息
+            //        Return directly to store information before expiration
             return r;
         }
-//        已过期需要缓存重建
-//        缓存重建
-//        获取互斥锁
+//        expired and needs cache reconstruction
+//        cache rebuild
+//        get mutex lock
         String lockKey = LOCK_SHOP_KEY + id;
         boolean isLock = tryLock(lockKey);
-//        判断是否获取锁成功
+//        Determine whether the lock acquisition is successful
         if (isLock) {
-            //        成功，开启独立线程，实现缓存重建
+            //        Successfully, start an independent thread to realize cache reconstruction.
             CACHE_REBUILD_EXECUTOR.submit(() -> {
                 try {
                     R r1 = dbFallback.apply(id);
@@ -104,7 +104,7 @@ public class CacheClient {
                 }
             });
         }
-//        返回过期的商铺信息
+//        return expired store information
         return r;
     }
 

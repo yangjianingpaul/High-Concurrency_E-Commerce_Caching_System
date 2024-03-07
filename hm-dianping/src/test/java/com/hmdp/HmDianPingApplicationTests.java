@@ -1,11 +1,18 @@
 package com.hmdp;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.lang.UUID;
 import cn.hutool.json.JSONUtil;
+import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.Shop;
+import com.hmdp.entity.User;
 import com.hmdp.service.impl.ShopServiceImpl;
+import com.hmdp.service.impl.UserServiceImpl;
 import com.hmdp.utils.CacheClient;
 import com.hmdp.utils.RedisIdWorker;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.BeanUtils;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.RedisGeoCommands;
@@ -13,18 +20,17 @@ import org.springframework.data.redis.core.RedisCommand;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.hmdp.utils.RedisConstants.CACHE_SHOP_KEY;
-import static com.hmdp.utils.RedisConstants.SHOP_GEO_KEY;
+import static com.hmdp.utils.RedisConstants.*;
 
 @SpringBootTest
 class HmDianPingApplicationTests {
@@ -39,6 +45,9 @@ class HmDianPingApplicationTests {
     private RedisIdWorker redisIdWorker;
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private UserServiceImpl userService;
 
     private ExecutorService es = Executors.newFixedThreadPool(500);
 
@@ -72,8 +81,7 @@ class HmDianPingApplicationTests {
     }
 
     /**
-     * 存入商铺位置信息
-     *
+     * store shop location information
      */
     @Test
     void loadShopData() {
@@ -101,16 +109,55 @@ class HmDianPingApplicationTests {
     @Test
     void testHyperLogLog() {
         String[] values = new String[1000];
-        int j=0;
-        for (int i=0;i<1000000;i++) {
-            j=i%1000;
+        int j = 0;
+        for (int i = 0; i < 1000000; i++) {
+            j = i % 1000;
             values[j] = "user_" + i;
-            if (j==999) {
-//                发送到redis
+            if (j == 999) {
+//                send to redis
                 stringRedisTemplate.opsForHyperLogLog().add("h12", values);
             }
         }
         Long count = stringRedisTemplate.opsForHyperLogLog().size("h12");
         System.out.println("count = " + count);
+    }
+
+    @Test
+    void testGetAll() {
+        for (int i = 1; i < 1005; i++) {
+            User user = userService.getById(i);
+            if (user == null) {
+                continue;
+            }
+
+            String token = UUID.randomUUID().toString(true);
+
+            File file = new File("/Users/yangjianing/Desktop/token.txt");
+            FileOutputStream outputStream = null;
+
+            try {
+                outputStream = new FileOutputStream(file, true);
+                byte[] bytes = token.getBytes();
+                outputStream.write(bytes);
+                outputStream.write("\r\n".getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } finally {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
+            Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
+                    CopyOptions.create()
+                            .setIgnoreNullValue(true)
+                            .setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString()));
+            String tokenKey = LOGIN_USER_KEY + token;
+            stringRedisTemplate.opsForHash().putAll(tokenKey, userMap);
+            stringRedisTemplate.expire(tokenKey, LOGIN_USER_TTL, TimeUnit.MINUTES);
+        }
     }
 }

@@ -11,14 +11,6 @@ import lombok.experimental.Accessors;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-/**
- * <p>
- * 
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
- */
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Accessors(chain = true)
@@ -28,78 +20,78 @@ public class Shop implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 主键
+     * primary key
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 商铺名称
+     * store name
      */
     private String name;
 
     /**
-     * 商铺类型的id
+     * id of store type
      */
     private Long typeId;
 
     /**
-     * 商铺图片，多个图片以','隔开
+     * store pictures multiple pictures separated by
      */
     private String images;
 
     /**
-     * 商圈，例如陆家嘴
+     * business districts such as lujiazui
      */
     private String area;
 
     /**
-     * 地址
+     * address
      */
     private String address;
 
     /**
-     * 经度
+     * longitude
      */
     private Double x;
 
     /**
-     * 维度
+     * dimensions
      */
     private Double y;
 
     /**
-     * 均价，取整数
+     * average price rounded to an integer
      */
     private Long avgPrice;
 
     /**
-     * 销量
+     * sales volume
      */
     private Integer sold;
 
     /**
-     * 评论数量
+     * number of comments
      */
     private Integer comments;
 
     /**
-     * 评分，1~5分，乘10保存，避免小数
+     * Rating, 1~5 points, multiply by 10 to save, avoid decimals
      */
     private Integer score;
 
     /**
-     * 营业时间，例如 10:00-22:00
+     * business hours for example 10 00 22 00
      */
     private String openHours;
 
     /**
-     * 创建时间
+     * creation time
      */
     private LocalDateTime createTime;
 
     /**
-     * 更新时间
+     * update time
      */
     private LocalDateTime updateTime;
 

@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 /**
- * redis实现分布式锁
+ * redis implements distributed lock
  */
 public class SimpleRedisLock implements ILock {
     private String name;
@@ -20,7 +20,7 @@ public class SimpleRedisLock implements ILock {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
-//    提前读取lua脚本
+//    read lua script ahead of time
     private static final String KEY_PREFIX = "lock:";
     private static final String ID_PREFIX = UUID.randomUUID().toString(true) + "-";
     private static final DefaultRedisScript<Long> UNLOCK_SCRIPT;
@@ -41,16 +41,16 @@ public class SimpleRedisLock implements ILock {
 
     @Override
     public void unlock() {
-//        a)lua脚本解决锁误删除问题
+//        a)Lua script solves the problem of accidental deletion of locks
         stringRedisTemplate.execute(
                 UNLOCK_SCRIPT,
                 Collections.singletonList(KEY_PREFIX + name),
                 ID_PREFIX + Thread.currentThread().getId());
 
-//        b)添加线程标识，解决锁误删问题
-//        获取线程标识
+//        b)Add thread identification to solve the problem of accidentally deleting locks
+//        get thread id
 //        String threadId = ID_PREFIX + Thread.currentThread().getId();
-//        获取锁中标识
+//        get the lock id
 //        String id = stringRedisTemplate.opsForValue().get(KEY_PREFIX + name);
 //        if (threadId.equals(id)) {
 //            stringRedisTemplate.delete(KEY_PREFIX + name);

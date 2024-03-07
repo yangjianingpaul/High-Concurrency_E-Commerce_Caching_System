@@ -20,7 +20,7 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
     }
 
     /**
-     * 刷新有效期
+     * refresh validity period
      *
      * @param request
      * @param response
@@ -65,23 +65,23 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request,
                              HttpServletResponse response,
                              Object handler) throws Exception {
-//        1.获取session
-//        获取请求头中的token
+//        1.get session
+//        get the token in the request header
         String token = request.getHeader("authorization");
         if (StrUtil.isBlank(token)) {
             return true;
         }
         String key = RedisConstants.LOGIN_USER_KEY + token;
-//        2.获取session中的用户
+//        2.get the user in the session
         Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(key);
-//        3.判断用户是否存在
-//        4.不存在，拦截
+//        3.determine whether the user exists
+//        4.does not exist intercept
         if (userMap.isEmpty()) {
             return true;
         }
-//        5.存在，保存用户信息到ThreadLocal
+//        5.exists save user information to thread local
         UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
-//        6.放行
+//        6.release
         UserHolder.saveUser(userDTO);
         stringRedisTemplate.expire(key, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
         return true;

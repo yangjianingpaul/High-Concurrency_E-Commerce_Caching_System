@@ -9,12 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 
 /**
- * <p>
- *  前端控制器
- * </p>
- *
- * @author 虎哥
- * @since 2021-12-22
+ * front controller
  */
 @RestController
 @RequestMapping("/voucher")
@@ -24,9 +19,9 @@ public class VoucherController {
     private IVoucherService voucherService;
 
     /**
-     * 新增普通券
-     * @param voucher 优惠券信息
-     * @return 优惠券id
+     * add ordinary coupons
+     * @param voucher coupon information
+     * @return coupon id
      */
     @PostMapping
     public Result addVoucher(@RequestBody Voucher voucher) {
@@ -35,9 +30,9 @@ public class VoucherController {
     }
 
     /**
-     * 新增秒杀券
-     * @param voucher 优惠券信息，包含秒杀信息
-     * @return 优惠券id
+     * added flash sale coupon
+     * @param voucher Coupon information, including flash sale information
+     * @return coupon id
      */
     @PostMapping("seckill")
     public Result addSeckillVoucher(@RequestBody Voucher voucher) {
@@ -46,9 +41,9 @@ public class VoucherController {
     }
 
     /**
-     * 查询店铺的优惠券列表
-     * @param shopId 店铺id
-     * @return 优惠券列表
+     * check the store s coupon list
+     * @param shopId store id
+     * @return coupon list
      */
     @GetMapping("/list/{shopId}")
     public Result queryVoucherOfShop(@PathVariable("shopId") Long shopId) {
