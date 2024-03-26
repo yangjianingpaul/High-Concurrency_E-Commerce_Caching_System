@@ -8,7 +8,7 @@
 
 ![](/resources/interceptor.png)
 
-## Merchant query cache
+## Shop query cache
 
 ![](/resources/redisCache.png)
 
@@ -34,7 +34,7 @@
 
 ![](/resources/logic_expired.png)
 
-## couponsec
+## Flash sale items
 
 - redis implements a globally unique id
 
@@ -74,7 +74,7 @@ public class RedisIdWorker {
 }
 ~~~
 
-- Second order
+- Coupon flash sale process
 
 ![](/resources/seckill.png)
 
@@ -119,7 +119,7 @@ public void unlock() {
 }
 ~~~
 
-## Instant kill optimization: asynchronous instant kill
+## flash sold optimization: asynchronous flash sold
 
 ![](/resources/seckillOptimization.png)
 
@@ -155,10 +155,10 @@ XGROUP DELCONSUMER key groupname consumername
 XREADGROUP GROUP group consumer [COUNT count] [BLOCK milliseconds] [NOACK] STREAMS key [key ...] ID [ID ...]
 ~~~
 
-## Notes from the expert shop
+## Post restaurant experience notes
 
-- Shop notes are similar to the evaluation of review sites, often a combination of graphics. There are two corresponding tables: tb_blog: list of notes, including the title of the notes, text, pictures, etc. tb_blog_comments: other users' comments on the notes
-- Check the scout notes
+- Shop notes are similar to the evaluation of review sites, often a combination of photograph. There are two corresponding tables: tb_blog: list of notes, including the title of the notes, text, pictures, etc. tb_blog_comments: other users' comments on the notes
+- Check the experience notes
 - Like function
 - Like leader board
 
