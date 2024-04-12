@@ -1,30 +1,30 @@
 # Function Realization
 
-## Shared session login based on Redis
+## 1.Shared session login based on Redis
 
 ![](/resources/redisImplementLogin.png)
 
-## Resolved the status login refresh problem
+## 2.Resolved the status login refresh problem
 
 ![](/resources/interceptor.png)
 
-## Shop query cache
+## 3.Shop query cache
 
 ![](/resources/redisCache.png)
 
-## Cache update strategy
+## 4.Cache update strategy
 
 - The database and cache are inconsistent
     - First operate the database, and then delete the cache, the reason is that if you choose the first scheme, in the two threads to access concurrently, suppose thread 1 first, he deleted the cache, at this time, thread 2 comes, he queries the cache data does not exist, at this time he writes to the cache, when he writes to the cache, thread 1 and then perform the update action, in fact, write is the old data, The new data is overwritten by the old data.
 
-## Cache penetration problem
+## 5.Cache penetration problem
 
 - Bloom filtration
 - Cache empty object
 
 ![](/resources/CacheBreakdown.png)
 
-## Cache breakdown problem
+## 6.Cache breakdown problem
 
 - Mutex
 
@@ -34,7 +34,7 @@
 
 ![](/resources/logic_expired.png)
 
-## Flash sale items
+## 7.Flash sale items
 
 - redis implements a globally unique id
 
@@ -90,7 +90,7 @@ boolean success = seckillVoucherService.update()
 
 ![](/resources/doubleOrdering.png)
 
-## Distributed lock
+## 8.Distributed lock
 - Using redis setNx method, when there are multiple threads enter, we use this method, when the first thread enters, redis has this key, and returns 1, if the result is 1, it means that he has captured the lock, then he goes to execute business, and then delete the lock, exit the lock logic, no brother who has captured the lock, Wait for some time and try again.
 
 - Solve the problem of distributed lock deletion by mistake:
@@ -98,7 +98,7 @@ boolean success = seckillVoucherService.update()
     - If consistent, release the lock
     - If inconsistent, the lock is not released
 
-## Lua scripts solve the atomicity problem of multiple commands
+## 9.Lua scripts solve the atomicity problem of multiple commands
 
 - Using Java code to invoke Lua scripts to transform distributed locks
 
@@ -119,11 +119,11 @@ public void unlock() {
 }
 ~~~
 
-## flash sold optimization: asynchronous flash sold
+## 10.flash sold optimization: asynchronous flash sold
 
 ![](/resources/seckillOptimization.png)
 
-## redis message Queue - based on stream
+## 11.Redis message Queue - based on stream
 
 - Create a Consumer group:
 
@@ -155,20 +155,20 @@ XGROUP DELCONSUMER key groupname consumername
 XREADGROUP GROUP group consumer [COUNT count] [BLOCK milliseconds] [NOACK] STREAMS key [key ...] ID [ID ...]
 ~~~
 
-## Post restaurant experience notes
+## 12.Post restaurant experience notes
 
 - Shop notes are similar to the evaluation of review sites, often a combination of photograph. There are two corresponding tables: tb_blog: list of notes, including the title of the notes, text, pictures, etc. tb_blog_comments: other users' comments on the notes
 - Check the experience notes
 - Like function
 - Like leader board
 
-## Friend follow
+## 13.Friend follow
 - Follow and unfollow
 - mutual followed account
 - feed stream, push to fan inbox
 - feed stream, to achieve paging query mailbox
 
-## Nearby business
+## 14.Nearby business
 - GEO is the short form of Geolocation, which stands for geographic coordinates. Redis added support for GEO in version 3.2, allowing the storage of geographic coordinate information to help us retrieve data based on latitude and longitude. Common commands are:
     - GEOADD: Adds a piece of geospatial information, including longitude, latitude, member
     - GEODIST: Calculates the distance between the specified two points and returns it
@@ -178,7 +178,7 @@ XREADGROUP GROUP group consumer [COUNT count] [BLOCK milliseconds] [NOACK] STREA
     - GEOSEARCH: Searches for members within a specified range and returns them sorted by distance from the specified point. The range can be circular or rectangular. 6.2. New Features
     - GEOSEARCHSTORE: Same functionality as GEOSEARCH, but you can store the results to a specified key. 6.2. New Features
 
-## User check-in: BitMap
+## 15.User check-in: BitMap
 - BitMap operation commands are:
     - SETBIT: Stores a 0 or 1 to the specified position (offset)
     - GETBIT: Gets the bit value of the specified position (offset)
@@ -191,7 +191,7 @@ XREADGROUP GROUP group consumer [COUNT count] [BLOCK milliseconds] [NOACK] STREA
 - Implement the sign-in interface and save the current user's current day sign-in information to Redis
     - We can take the year and month as the key of bitMap, and then save it in a bitMap, and change the number from 0 to 1 on the corresponding bit every time you sign in, as long as the corresponding is 1, it indicates that the day has been signed in, and otherwise there is no sign in.
 
-## UV statistics
+## 16.UV statistics
 - UV: The full name of Unique Visitor, also called the number of independent visitors, refers to the natural person who visits and views this web page through the Internet. If the same user visits the website multiple times in a day, only one time is recorded.
 - PV: Full name Page View, also known as page visits or clicks, each user visits a page of the website, record 1 PV, the user opens the page many times, then record multiple PV. Often used to measure traffic to a website.
 
