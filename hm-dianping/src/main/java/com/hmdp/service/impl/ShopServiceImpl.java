@@ -75,7 +75,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     /**
      * logical expiration resolves cache breakdown
      *
-     *
      * @param id
      * @return
      */
@@ -134,7 +133,6 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     /**
      * the mutex solves the cache breakdown
-     *
      *
      * @param id
      * @return
@@ -297,9 +295,9 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         String key = SHOP_GEO_KEY + typeId;
         GeoResults<RedisGeoCommands.GeoLocation<String>> results = stringRedisTemplate.opsForGeo()
                 .search(key,
-                GeoReference.fromCoordinate(x, y),
-                new Distance(5000),
-                RedisGeoCommands.GeoSearchCommandArgs.newGeoSearchArgs().includeDistance().limit(end));
+                        GeoReference.fromCoordinate(x, y),
+                        new Distance(5000),
+                        RedisGeoCommands.GeoSearchCommandArgs.newGeoSearchArgs().includeDistance().limit(end));
 //        parse out the id
         if (results == null) {
             return Result.ok(Collections.emptyList());

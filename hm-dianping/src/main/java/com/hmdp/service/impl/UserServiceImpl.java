@@ -122,7 +122,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 //        get today is the first day of the month
         int dayOfMonth = now.getDayOfMonth();
 //        write in redis setbit key offset 1
-        stringRedisTemplate.opsForValue().setBit(key, dayOfMonth-1,true);
+        stringRedisTemplate.opsForValue().setBit(key, dayOfMonth - 1, true);
         return Result.ok();
     }
 

@@ -20,7 +20,7 @@ public class SimpleRedisLock implements ILock {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
-//    read lua script ahead of time
+    //    read lua script ahead of time
     private static final String KEY_PREFIX = "lock:";
     private static final String ID_PREFIX = UUID.randomUUID().toString(true) + "-";
     private static final DefaultRedisScript<Long> UNLOCK_SCRIPT;

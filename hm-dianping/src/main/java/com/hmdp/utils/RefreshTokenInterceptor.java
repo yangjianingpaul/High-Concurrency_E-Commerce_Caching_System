@@ -60,7 +60,6 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
 //                                Object handler, Exception ex) throws Exception {
 //        UserHolder.removeUser();
 //    }
-
     @Override
     public boolean preHandle(HttpServletRequest request,
                              HttpServletResponse response,

@@ -20,6 +20,7 @@ public class VoucherController {
 
     /**
      * add ordinary coupons
+     *
      * @param voucher coupon information
      * @return coupon id
      */
@@ -31,6 +32,7 @@ public class VoucherController {
 
     /**
      * added flash sale coupon
+     *
      * @param voucher Coupon information, including flash sale information
      * @return coupon id
      */
@@ -42,11 +44,12 @@ public class VoucherController {
 
     /**
      * check the store s coupon list
+     *
      * @param shopId store id
      * @return coupon list
      */
     @GetMapping("/list/{shopId}")
     public Result queryVoucherOfShop(@PathVariable("shopId") Long shopId) {
-       return voucherService.queryVoucherOfShop(shopId);
+        return voucherService.queryVoucherOfShop(shopId);
     }
 }
