@@ -8,10 +8,10 @@ import org.springframework.stereotype.Service;
 
 /**
  * <p>
- * 秒杀优惠券表，与优惠券是一对一关系 服务实现类
+ * Flash sale coupon table, one-to-one relationship with coupons, service implementation category
  * </p>
  *
- * @author 虎哥
+ * @author yang
  * @since 2022-01-04
  */
 @Service
