@@ -1,0 +1,23 @@
+spring:
+  profiles:
+    active: dev
+
+app:
+  redis-keys:
+    login-code: "login:code:"
+    login-user: "login:token:"
+    cache-shop: "cache:shop:"
+    cache-shop-type: "cache:shopType"
+    lock-shop: "lock:shop:"
+    lock-order: "lock:order:"
+    seckill-stock: "seckill:stock:"
+    blog-liked: "blog:liked:"
+    feed: "feed:"
+    shop-geo: "shop:geo:"
+    user-sign: "sign:"
+  cache-ttl:
+    login-code: 2
+    login-user: 36000
+    cache-null: 2
+    cache-shop: 30
+    lock-shop: 10
