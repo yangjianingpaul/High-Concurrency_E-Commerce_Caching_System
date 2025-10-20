@@ -1,0 +1,57 @@
+# Compiled class files
+*.class
+target/
+
+# Log files
+*.log
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.eclipse/
+.classpath
+.project
+.settings/
+
+# macOS
+.DS_Store
+
+# Test data
+*.jtl
+jmeter-tests/results/
+jmeter-tests/reports/
+
+# Docker volumes
+docker-env/mysql/data/
+docker-env/redis/data/
+docker-env/grafana/data/
+
+# Temporary files
+*.tmp
+*.backup
+*.swp
+*~
+
+# Environment files
+.env
+*.local
+
+# Session summaries (development notes)
+SESSION_SUMMARY*.md
+NEXT_STEPS*.md
+FILE_CLEANUP*.md

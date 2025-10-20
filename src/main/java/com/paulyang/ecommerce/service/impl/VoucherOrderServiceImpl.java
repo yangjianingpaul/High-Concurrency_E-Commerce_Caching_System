@@ -228,17 +228,17 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     public Result seckillVoucher(Long voucherId) {
         Long userId = UserHolder.getUser().getId();
         long orderId = redisIdWorker.nextId("order");
-        
+
         // Execute seckill validation via Lua script
         int validationResult = validateSeckillEligibility(voucherId, userId, orderId);
-        
+
         if (validationResult != 0) {
             return handleSeckillFailure(validationResult);
         }
-        
+
         // Initialize transaction proxy for async order processing
         initializeTransactionProxy();
-        
+
         return Result.ok(orderId);
     }
     

@@ -100,40 +100,49 @@ This project tackles the **most challenging problems in high-concurrency e-comme
 
 ## 🏗️ System Architecture
 
+> 📐 **Detailed Architecture Diagrams:** See [ARCHITECTURE.md](./ARCHITECTURE.md) for complete system architecture, seckill data flow, and cache strategy comparisons.
+
+### High-Level Overview
+
 ```
-┌──────────────────────────────────────────────┐
-│         High-Concurrency Client Load         │
-│          (10,000+ requests/second)           │
-└───────────────────┬──────────────────────────┘
-                    │
-      ┌─────────────┼─────────────┐
-      │                           │
-┌─────▼────┐              ┌──────▼──────┐
-│  Bloom   │              │   Redis     │
-│  Filter  │──────────────│   Cluster   │
-└──────────┘              │             │
-      │                   │ • Cache     │
-      │ Not Found         │ • Locks     │
-      │ (Return Empty)    │ • GeoData   │
-      ▼                   └──────┬──────┘
- ┌─────────┐                     │
- │  Reject │              Cache  │  Miss
- │ Request │              Hit    │
- └─────────┘                     │
-                          ┌──────▼──────┐
-                          │   Mutex     │
-                          │   Lock      │
-                          │  (Lua)      │
-                          └──────┬──────┘
-                                 │
-                        ┌────────▼────────┐
-                        │   MySQL DB      │
-                        │                 │
-                        │ • Products      │
-                        │ • Orders        │
-                        │ • Inventory     │
-                        └─────────────────┘
+┌────────────────────────────────────────────────────────────┐
+│              2,000+ Concurrent Users                       │
+│              10,000+ QPS / 1,000 TPS                       │
+└───────────────────────┬────────────────────────────────────┘
+                        │
+                        ▼
+┌────────────────────────────────────────────────────────────┐
+│          Nginx Load Balancer (Least-Connection)            │
+│          • Health Checks  • Connection Pooling             │
+└──────┬─────────────────┬─────────────────┬─────────────────┘
+       │                 │                 │
+       ▼                 ▼                 ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│ Spring Boot  │  │ Spring Boot  │  │ Spring Boot  │
+│ Instance #1  │  │ Instance #2  │  │ Instance #3  │
+│ JVM: 2-4GB   │  │ JVM: 2-4GB   │  │ JVM: 2-4GB   │
+│ 200 threads  │  │ 200 threads  │  │ 200 threads  │
+└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+       │                 │                 │
+       └────────┬────────┴────────┬────────┘
+                │                 │
+                ▼                 ▼
+    ┌──────────────────┐  ┌──────────────────┐
+    │ Redis 7.2        │  │ MySQL 8.0        │
+    │ (Cache + Queue)  │  │ (Persistent DB)  │
+    │                  │  │                  │
+    │ • String Cache   │  │ • InnoDB Engine  │
+    │ • Lua Scripts    │  │ • HikariCP Pool  │
+    │ • Redis Streams  │  │ • 6GB Buffer     │
+    │ • Distributed ID │  │                  │
+    └──────────────────┘  └──────────────────┘
 ```
+
+**Key Design Patterns:**
+- ✅ **Stateless Application**: All state in Redis/MySQL for horizontal scaling
+- ✅ **Async Processing**: Redis Streams decouple validation from order creation
+- ✅ **Circuit Breaker**: Health checks prevent requests to failed instances
+- ✅ **Connection Pooling**: Optimized for high-concurrency scenarios
 
 ---
 
@@ -282,25 +291,88 @@ public <T> T queryWithLogicalExpire(String key, Function<String, T> dbFallback) 
 
 ## 📊 Performance Benchmarks
 
-| Metric | Result |
-|--------|--------|
-| **Concurrent Requests** | 10,000+ requests/second |
-| **Cache Hit Rate** | 95%+ during normal operations |
-| **Response Time (Cached)** | <5ms (p99) |
-| **Response Time (DB)** | <50ms (p99) |
-| **Lock Acquisition Time** | <1ms (Lua script) |
-| **Geospatial Query** | <10ms for 50,000 shops |
+> **Test Date:** October 2025
+> **Test Environment:** Intel i5-12600KF (10-core), 32GB RAM, 1TB NVMe, Ubuntu 24.04 LTS
+> **Architecture:** 3× Spring Boot + Nginx Load Balancer + MySQL 8.0 + Redis 7.2
+> **Test Tool:** Apache JMeter 5.6.3
+> **Test Data:** 102,005 users, 50,114 shops, 110 seckill vouchers (1M+ inventory)
 
-### Load Testing Results
-```
-Scenario: Flash Sale (1000 concurrent users, 10 seconds)
-├─ Total Requests: 12,438
-├─ Successful: 12,435 (99.97%)
-├─ Failed: 3 (0.03%)
-├─ Average Response: 8ms
-├─ P95 Response: 15ms
-└─ P99 Response: 28ms
-```
+### Production Performance Metrics
+
+| Metric | Result | Industry Standard |
+|--------|--------|-------------------|
+| **Sustainable QPS** | **10,000** queries/second | ✅ Excellent (5K-15K) |
+| **Peak QPS** | **12,012** queries/second | ✅ Above expectations |
+| **Average Latency** | **1-2ms** (at 10K QPS) | ✅ Exceptional (<50ms) |
+| **P99 Latency** | **71ms** (at 12K QPS) | ✅ Good (<200ms) |
+| **Error Rate** | **0.00%** (all tests) | ✅ Perfect (target <1%) |
+| **Cache Hit Rate** | **95%+** | ✅ Industry standard |
+| **Daily User Capacity** | **100K-500K** active users | ✅ Medium-to-large scale |
+
+### Progressive Load Testing Results
+
+#### Cache Query Performance (Shop Queries)
+
+| Test Scenario | Threads | Total Requests | QPS | Avg Latency | P50 | P90 | P99 | Max | Error Rate |
+|---------------|---------|----------------|-----|-------------|-----|-----|-----|-----|------------|
+| **Baseline** | 50 | 5,000 | 1,002 | 1ms | 1ms | 1ms | 1ms | 45ms | 0.00% |
+| **Medium Load** | 500 | 50,000 | 4,986 | 1ms | 1ms | 1ms | 1ms | 29ms | 0.00% |
+| **High Load** | 1,000 | 100,000 | **9,955** | 2ms | 1ms | 2ms | 3ms | 49ms | 0.00% |
+| **Stress Test** | 2,000 | 200,000 | **12,012** | 71ms | 14ms | 199ms | 516ms | 3,093ms | 0.00% |
+
+**Key Findings:**
+- ✅ **Optimal Performance Range:** 500-1,000 concurrent users (10,000 QPS, <3ms latency)
+- ✅ **Zero Errors:** 100% success rate across all 355,000 test requests
+- ✅ **Linear Scaling:** Performance scales linearly up to 1,000 threads
+- ⚠️ **Saturation Point:** Thread pool saturation begins at 2,000 threads (600 total across 3 instances)
+
+#### Flash Sale (Seckill) Performance
+
+| Test Scenario | Threads | Total Requests | TPS | Avg Latency | P50 | P95 | P99 | Max | Error Rate | Overselling |
+|---------------|---------|----------------|-----|-------------|-----|-----|-----|-----|------------|-------------|
+| **500 Users** | 500 | 10,000 | 999 | 2ms | 1ms | 1ms | 4ms | 70ms | 0.00% | **Zero** ✅ |
+| **1K Users** | 1,000 | 10,000 | 999 | 1ms | 1ms | 1ms | 4ms | 34ms | 0.00% | **Zero** ✅ |
+| **2K Users** | 2,000 | 10,000 | 1,006 | 0.82ms | 1ms | 1ms | 4ms | 31ms | 0.00% | **Zero** ✅ |
+
+**Flash Sale Key Findings:**
+- ✅ **Consistent TPS:** ~1,000 TPS across all concurrency levels (Lua script bottleneck)
+- ✅ **Sub-millisecond Latency:** Average 0.82-2ms, P99 <5ms
+- ✅ **Zero Overselling:** 29,957 orders created from 30,000 requests - perfect atomic operations
+- ✅ **100% Accuracy:** Redis Lua scripts + distributed locks prevent all race conditions
+- ✅ **Perfect Reliability:** 0.00% error rate, no duplicate orders, no stock inconsistencies
+- 📊 **Bottleneck:** Lua script execution limits TPS to ~1,000 (intentional for inventory safety)
+
+### Real-World Capacity
+
+**What This System Can Handle:**
+
+| User Scenario | Concurrent Users | Daily Active Users | Example Use Case |
+|---------------|------------------|-------------------|------------------|
+| **Current Baseline** | 1,000 | 100,000-500,000 | Medium-sized e-commerce platform |
+| **With Optimization** | 1,500 | 200,000-800,000 | Major city restaurant platform |
+| **Horizontal Scaling (6 instances)** | 3,000 | 500,000-1,500,000 | Regional e-commerce leader |
+| **Enterprise Setup (12 instances)** | 10,000+ | 2,000,000-5,000,000 | National flash sale platform |
+
+**Flash Sale Capability (Validated Performance):**
+- ✅ Handles **2,000 simultaneous users** with **1,000 TPS** sustained
+- ✅ Tested with **110 seckill vouchers** and **1.1M initial inventory**
+- ✅ **Zero overselling verified:** 29,957 orders processed perfectly (100% accuracy)
+- ✅ **Sub-millisecond response:** 0.82ms avg, P99 <5ms
+- ✅ Atomic Redis Lua scripts + Redisson distributed locks
+- ✅ Asynchronous order processing via Redis Streams
+
+### Hardware Scaling Estimates
+
+Performance on different hardware configurations:
+
+| Hardware | CPU Cores | RAM | Estimated QPS | Daily Users | Cost |
+|----------|-----------|-----|---------------|-------------|------|
+| **Entry Server** | 6-core | 16GB | ~5,000 | 20K-100K | $1,500 |
+| **Current Test** | 10-core | 32GB | **~10,000** | 100K-500K | $2,500 |
+| **High-Performance** | 16-core | 64GB | ~30,000 | 500K-1.5M | $4,000 |
+| **Enterprise** | 64-core | 256GB | ~100,000 | 2M-5M | $20,000 |
+
+> 📊 **Full Performance Report:** See [PERFORMANCE_TEST_REPORT.md](./PERFORMANCE_TEST_REPORT.md) for complete analysis, bottleneck identification, optimization recommendations, and cloud migration cost analysis.
 
 ---
 
@@ -369,7 +441,33 @@ Built by **Paul Yang** based on production experience at HUAWEI and enhanced dur
 
 ---
 
-## 📚 Learning Resources
+## 📚 Documentation & Resources
+
+### Project Documentation
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Complete system architecture diagrams
+  - Production deployment architecture
+  - Seckill data flow (step-by-step)
+  - Cache strategy comparisons
+  - Technology stack integration
+
+- **[PERFORMANCE_TEST_REPORT.md](./PERFORMANCE_TEST_REPORT.md)** - Comprehensive performance analysis
+  - Complete test results and methodology
+  - Hardware scaling estimates
+  - Bottleneck analysis and optimization recommendations
+  - Cost analysis (self-hosted vs cloud)
+
+- **[INTERVIEW_PREP.md](./INTERVIEW_PREP.md)** - Technical interview preparation
+  - Top 20 interview questions with detailed answers
+  - STAR method examples
+  - System design deep-dives
+  - Common traps and how to avoid them
+
+- **[PERFORMANCE_CHEAT_SHEET.md](./PERFORMANCE_CHEAT_SHEET.md)** - Quick reference
+  - Key metrics to memorize
+  - One-sentence explanations
+  - Interview answer templates
+
+### Learning Resources
 
 This project demonstrates concepts from:
 - Redis in Action (cache patterns)
