@@ -55,3 +55,7 @@ docker-env/grafana/data/
 SESSION_SUMMARY*.md
 NEXT_STEPS*.md
 FILE_CLEANUP*.md
+
+# Local agent skill installations
+.agents/
+.claude/
