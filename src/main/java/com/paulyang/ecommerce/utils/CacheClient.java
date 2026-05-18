@@ -64,27 +64,46 @@ public class CacheClient {
      */
     public <R, ID> R queryWithPassThrough(String keyPrefix, ID id, Class<R> type, Function<ID, R> dbFallback) {
         String key = keyPrefix + id;
-        // 1. Query cache from Redis
         String json = stringRedisTemplate.opsForValue().get(key);
-        // 2. Check if data exists in cache
+        // Cache hit - return the stored value
         if (StrUtil.isNotBlank(json)) {
-            // 3. Cache hit - return data directly
             return JSONUtil.toBean(json, type);
         }
-        // Check if this is a cached null value (empty string)
-        if (json != null) {
+        // Negative Cache Entry hit - the record is known to be absent
+        if (isNegativeCacheHit(json)) {
             return null;
         }
-        // 4. Cache miss - query database
+        // Cache miss - fall back to the database
         R r = dbFallback.apply(id);
-        // 5. Handle null result from database
         if (r == null) {
-            stringRedisTemplate.opsForValue().set(key, "", CACHE_NULL_TTL, TimeUnit.MINUTES);
+            writeNegativeCacheEntry(key);
             return null;
         }
-        // 6. Cache the result in Redis
+        // Cache the resolved value
         stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(r), CACHE_SHOP_TTL, TimeUnit.MINUTES);
         return r;
+    }
+
+    /**
+     * Tests whether the cached payload is a Negative Cache Entry: a non-null but
+     * blank value recorded to mark that the backing record is known to be absent.
+     *
+     * @param cached the raw value read from Redis (may be {@code null} on a cache miss)
+     * @return {@code true} if {@code cached} is a Negative Cache Entry
+     */
+    private boolean isNegativeCacheHit(String cached) {
+        return cached != null && StrUtil.isBlank(cached);
+    }
+
+    /**
+     * Writes a Negative Cache Entry under {@code key} so repeat lookups for the
+     * absent record are answered from Redis instead of the database
+     * (Cache Penetration defence).
+     *
+     * @param key the Redis key whose backing record is absent
+     */
+    private void writeNegativeCacheEntry(String key) {
+        stringRedisTemplate.opsForValue().set(key, "", CACHE_NULL_TTL, TimeUnit.MINUTES);
     }
 
     private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
@@ -141,13 +160,10 @@ public class CacheClient {
             // Not expired - return cached data directly
             return r;
         }
-        // Expired - needs cache reconstruction
-        // Try to acquire mutex lock for cache rebuild
-        String lockKey = LOCK_SHOP_KEY + id;
-        boolean isLock = tryLock(lockKey);
-        // Check if lock acquisition was successful
-        if (isLock) {
-            // Lock acquired - start background thread for cache reconstruction
+        // Logically expired - exactly one reader rebuilds in the background
+        String rebuildLockKey = LOCK_SHOP_KEY + id;
+        if (acquireRebuildLock(rebuildLockKey)) {
+            // Rebuild Lock held - reconstruct asynchronously, then release it
             CACHE_REBUILD_EXECUTOR.submit(() -> {
                 try {
                     R r1 = dbFallback.apply(id);
@@ -155,20 +171,33 @@ public class CacheClient {
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 } finally {
-                    unlock(lockKey);
+                    releaseRebuildLock(rebuildLockKey);
                 }
             });
         }
-        // Return expired data (better than no data)
+        // Stale-on-expiry read - serve the existing entry while it refreshes
         return r;
     }
 
-    private boolean tryLock(String key) {
-        Boolean flag = stringRedisTemplate.opsForValue().setIfAbsent(key, "1", 10, TimeUnit.SECONDS);
+    /**
+     * Attempts to take the Rebuild Lock: a single-holder marker so that exactly
+     * one reader reconstructs a logically expired key while others are served
+     * the existing entry (Cache Breakdown defence).
+     *
+     * @param lockKey the Redis key holding the Rebuild Lock
+     * @return {@code true} if this caller now holds the Rebuild Lock
+     */
+    private boolean acquireRebuildLock(String lockKey) {
+        Boolean flag = stringRedisTemplate.opsForValue().setIfAbsent(lockKey, "1", 10, TimeUnit.SECONDS);
         return BooleanUtil.isTrue(flag);
     }
 
-    private void unlock(String key) {
-        stringRedisTemplate.delete(key);
+    /**
+     * Releases the Rebuild Lock so the next logically expired read may rebuild.
+     *
+     * @param lockKey the Redis key holding the Rebuild Lock
+     */
+    private void releaseRebuildLock(String lockKey) {
+        stringRedisTemplate.delete(lockKey);
     }
 }
