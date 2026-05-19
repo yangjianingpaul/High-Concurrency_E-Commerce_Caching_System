@@ -1,13 +1,44 @@
 # High-Concurrency E-Commerce Caching System
 
-> Production-grade caching system designed for extreme traffic scenarios like flash sales. Handles 10,000+ concurrent requests with sub-millisecond response times.
+> A study project exploring Redis cache strategies and Redis-based distributed
+> locking under concurrency, built on a well-known tutorial baseline and then
+> hardened with a characterization-test-first engineering workflow.
 
-🎥 **[Watch Live Demo on YouTube](https://youtu.be/_4fdCW4lVE8)**
+🎥 **[Watch Demo on YouTube](https://youtu.be/_4fdCW4lVE8)**
 
 [![Java](https://img.shields.io/badge/Java-8-orange)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-2.5-green)](https://spring.io/projects/spring-boot)
 [![Redis](https://img.shields.io/badge/Redis-6.x-red)](https://redis.io/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.x-blue)](https://www.mysql.com/)
+
+---
+
+## 🔎 Provenance & Portfolio Scope
+
+**Origin (disclosed up front):** this repository started from the widely-used
+**hmdp / 黑马点评 ("Dianping") tutorial** for Spring Boot + Redis. The original
+business scaffolding, schema, and feature set are tutorial-derived. This is
+**not** an original production system, and it is not a system the author shipped
+at any employer.
+
+**What the portfolio signal actually is — the Engineering Delta.** The value
+here is not authorship of the baseline; it is the disciplined engineering work
+applied *on top of* it:
+
+- **Characterization tests** that pin real behaviour before any change
+  (`CacheClientTest`, `MutexRedisLockTest`).
+- **Distributed-lock failure-mode analysis** — claimed vs. characterized
+  behaviour of the hand-rolled Redis lock:
+  [`docs/distributed-lock-failure-modes.md`](./docs/distributed-lock-failure-modes.md).
+- **Architecture Decision Records** documenting real trade-offs, e.g.
+  [ADR-0001: Redisson over the hand-rolled lock](./docs/adr/0001-redis-distributed-lock-redisson-over-handrolled.md).
+- **Correctness-preserving refactoring** in small, reviewable slices with the
+  test suite green at each step.
+
+Performance numbers below are **local single-machine measurements** on
+tutorial-derived code, kept for transparency — they are not production capacity
+claims. The author has backend engineering experience elsewhere; that belongs
+in a résumé, not as this repository's provenance.
 
 ---
 
@@ -24,11 +55,18 @@
 
 ## 🎯 Overview
 
-This project tackles the **most challenging problems in high-concurrency e-commerce systems**: cache avalanche, cache penetration, cache breakdown, and distributed locking. It's architected to handle extreme traffic spikes during flash sales while maintaining data consistency.
+This project works through the classic high-concurrency caching problems —
+cache avalanche, cache penetration, cache breakdown — and Redis-based
+distributed locking, using a flash-sale scenario as the working example.
 
-**Background:** Built based on experience at **HUAWEI** (2021-2022) working on high-concurrency e-commerce systems, with advanced implementations that go beyond production requirements.
+**Background:** the baseline is the hmdp / 黑马点评 tutorial (see *Provenance &
+Portfolio Scope* above). The engineering contribution is the test-first
+hardening, failure-mode analysis, and ADR-documented decisions layered on top,
+not the original feature set.
 
-**Use Case:** Flash sale scenarios where thousands of users simultaneously attempt to purchase limited inventory items.
+**Use Case (illustrative):** a flash sale where many users contend for limited
+inventory — used here to exercise cache and locking behaviour, not as a claim of
+production deployment.
 
 ---
 
@@ -89,12 +127,18 @@ This project tackles the **most challenging problems in high-concurrency e-comme
 ### 4. Distributed Locking
 **Problem:** Multiple instances need atomic operations on shared resources.
 
-**Solution:**
+**Solution (with characterized limits):**
 ```java
-// Custom Lua scripts ensure atomic lock acquire/release
-// Automatic lock expiration prevents deadlocks
-// UUID-based lock ownership verification
+// Custom Lua scripts ensure atomic lock acquire (SET NX EX) and
+// atomic owner-checked release (get-compare-del).
 ```
+The hand-rolled lock's *real* behaviour — atomic acquire and genuine
+foreign-thread rejection, but a **fixed lease with no watchdog/renewal** and
+**non-reentrancy** — is pinned by tests and analysed in
+[`docs/distributed-lock-failure-modes.md`](./docs/distributed-lock-failure-modes.md).
+Production locking therefore uses Redisson `RLock`
+([ADR-0001](./docs/adr/0001-redis-distributed-lock-redisson-over-handrolled.md));
+the hand-rolled lock is kept as a documented teaching artifact.
 
 ---
 
@@ -106,8 +150,7 @@ This project tackles the **most challenging problems in high-concurrency e-comme
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│              2,000+ Concurrent Users                       │
-│              10,000+ QPS / 1,000 TPS                       │
+│        Load generator (local JMeter, single machine)       │
 └───────────────────────┬────────────────────────────────────┘
                         │
                         ▼
@@ -289,90 +332,47 @@ public <T> T queryWithLogicalExpire(String key, Function<String, T> dbFallback) 
 
 ---
 
-## 📊 Performance Benchmarks
+## 📊 Local Measurements (not production capacity)
 
-> **Test Date:** October 2025
-> **Test Environment:** Intel i5-12600KF (10-core), 32GB RAM, 1TB NVMe, Ubuntu 24.04 LTS
-> **Architecture:** 3× Spring Boot + Nginx Load Balancer + MySQL 8.0 + Redis 7.2
-> **Test Tool:** Apache JMeter 5.6.3
-> **Test Data:** 102,005 users, 50,114 shops, 110 seckill vouchers (1M+ inventory)
+> ⚠️ These are **single-machine, local JMeter runs against tutorial-derived
+> code**. They are kept for transparency and to exercise the cache/lock paths.
+> They are **not** production benchmarks, sustained-capacity guarantees, or
+> daily-user/cost projections — any such framing has been deliberately removed.
+>
+> **Environment:** one developer machine (10-core, 32GB), single Redis + MySQL,
+> 3 local Spring Boot instances behind local Nginx. **Tool:** JMeter 5.6.3.
+> **Seed data:** ~102k users, ~50k shops, 110 seckill vouchers.
 
-### Production Performance Metrics
+### Cache query path (local)
 
-| Metric | Result | Industry Standard |
-|--------|--------|-------------------|
-| **Sustainable QPS** | **10,000** queries/second | ✅ Excellent (5K-15K) |
-| **Peak QPS** | **12,012** queries/second | ✅ Above expectations |
-| **Average Latency** | **1-2ms** (at 10K QPS) | ✅ Exceptional (<50ms) |
-| **P99 Latency** | **71ms** (at 12K QPS) | ✅ Good (<200ms) |
-| **Error Rate** | **0.00%** (all tests) | ✅ Perfect (target <1%) |
-| **Cache Hit Rate** | **95%+** | ✅ Industry standard |
-| **Daily User Capacity** | **100K-500K** active users | ✅ Medium-to-large scale |
+| Threads | Total Requests | Observed QPS | Avg | P99 | Max | Errors |
+|---------|----------------|--------------|-----|-----|-----|--------|
+| 50 | 5,000 | ~1,000 | 1ms | 1ms | 45ms | 0% |
+| 500 | 50,000 | ~5,000 | 1ms | 1ms | 29ms | 0% |
+| 1,000 | 100,000 | ~9,900 | 2ms | 3ms | 49ms | 0% |
+| 2,000 | 200,000 | ~12,000 | 71ms | 516ms | 3,093ms | 0% |
 
-### Progressive Load Testing Results
+Observation: on this single machine, latency stays low to ~1,000 threads and
+degrades sharply (P99 → ~516ms) at 2,000 — i.e. the local setup saturates, as
+expected. No claim is made about behaviour beyond this machine.
 
-#### Cache Query Performance (Shop Queries)
+### Flash-sale (seckill) correctness — the result that matters
 
-| Test Scenario | Threads | Total Requests | QPS | Avg Latency | P50 | P90 | P99 | Max | Error Rate |
-|---------------|---------|----------------|-----|-------------|-----|-----|-----|-----|------------|
-| **Baseline** | 50 | 5,000 | 1,002 | 1ms | 1ms | 1ms | 1ms | 45ms | 0.00% |
-| **Medium Load** | 500 | 50,000 | 4,986 | 1ms | 1ms | 1ms | 1ms | 29ms | 0.00% |
-| **High Load** | 1,000 | 100,000 | **9,955** | 2ms | 1ms | 2ms | 3ms | 49ms | 0.00% |
-| **Stress Test** | 2,000 | 200,000 | **12,012** | 71ms | 14ms | 199ms | 516ms | 3,093ms | 0.00% |
+| Threads | Requests | TPS | Avg | P99 | Errors | Overselling |
+|---------|----------|-----|-----|-----|--------|-------------|
+| 500 | 10,000 | ~1,000 | 2ms | 4ms | 0% | none |
+| 1,000 | 10,000 | ~1,000 | 1ms | 4ms | 0% | none |
+| 2,000 | 10,000 | ~1,000 | <1ms | 4ms | 0% | none |
 
-**Key Findings:**
-- ✅ **Optimal Performance Range:** 500-1,000 concurrent users (10,000 QPS, <3ms latency)
-- ✅ **Zero Errors:** 100% success rate across all 355,000 test requests
-- ✅ **Linear Scaling:** Performance scales linearly up to 1,000 threads
-- ⚠️ **Saturation Point:** Thread pool saturation begins at 2,000 threads (600 total across 3 instances)
+The valuable signal here is **correctness, not throughput**: across 30,000
+contended requests the atomic Redis Lua check produced **no overselling and no
+duplicate orders**. TPS is intentionally bounded (~1,000) by the Lua-script
+serialization that guarantees inventory safety. Throughput on a single dev
+machine is not a portfolio claim; the verified absence of race conditions is.
 
-#### Flash Sale (Seckill) Performance
-
-| Test Scenario | Threads | Total Requests | TPS | Avg Latency | P50 | P95 | P99 | Max | Error Rate | Overselling |
-|---------------|---------|----------------|-----|-------------|-----|-----|-----|-----|------------|-------------|
-| **500 Users** | 500 | 10,000 | 999 | 2ms | 1ms | 1ms | 4ms | 70ms | 0.00% | **Zero** ✅ |
-| **1K Users** | 1,000 | 10,000 | 999 | 1ms | 1ms | 1ms | 4ms | 34ms | 0.00% | **Zero** ✅ |
-| **2K Users** | 2,000 | 10,000 | 1,006 | 0.82ms | 1ms | 1ms | 4ms | 31ms | 0.00% | **Zero** ✅ |
-
-**Flash Sale Key Findings:**
-- ✅ **Consistent TPS:** ~1,000 TPS across all concurrency levels (Lua script bottleneck)
-- ✅ **Sub-millisecond Latency:** Average 0.82-2ms, P99 <5ms
-- ✅ **Zero Overselling:** 29,957 orders created from 30,000 requests - perfect atomic operations
-- ✅ **100% Accuracy:** Redis Lua scripts + distributed locks prevent all race conditions
-- ✅ **Perfect Reliability:** 0.00% error rate, no duplicate orders, no stock inconsistencies
-- 📊 **Bottleneck:** Lua script execution limits TPS to ~1,000 (intentional for inventory safety)
-
-### Real-World Capacity
-
-**What This System Can Handle:**
-
-| User Scenario | Concurrent Users | Daily Active Users | Example Use Case |
-|---------------|------------------|-------------------|------------------|
-| **Current Baseline** | 1,000 | 100,000-500,000 | Medium-sized e-commerce platform |
-| **With Optimization** | 1,500 | 200,000-800,000 | Major city restaurant platform |
-| **Horizontal Scaling (6 instances)** | 3,000 | 500,000-1,500,000 | Regional e-commerce leader |
-| **Enterprise Setup (12 instances)** | 10,000+ | 2,000,000-5,000,000 | National flash sale platform |
-
-**Flash Sale Capability (Validated Performance):**
-- ✅ Handles **2,000 simultaneous users** with **1,000 TPS** sustained
-- ✅ Tested with **110 seckill vouchers** and **1.1M initial inventory**
-- ✅ **Zero overselling verified:** 29,957 orders processed perfectly (100% accuracy)
-- ✅ **Sub-millisecond response:** 0.82ms avg, P99 <5ms
-- ✅ Atomic Redis Lua scripts + Redisson distributed locks
-- ✅ Asynchronous order processing via Redis Streams
-
-### Hardware Scaling Estimates
-
-Performance on different hardware configurations:
-
-| Hardware | CPU Cores | RAM | Estimated QPS | Daily Users | Cost |
-|----------|-----------|-----|---------------|-------------|------|
-| **Entry Server** | 6-core | 16GB | ~5,000 | 20K-100K | $1,500 |
-| **Current Test** | 10-core | 32GB | **~10,000** | 100K-500K | $2,500 |
-| **High-Performance** | 16-core | 64GB | ~30,000 | 500K-1.5M | $4,000 |
-| **Enterprise** | 64-core | 256GB | ~100,000 | 2M-5M | $20,000 |
-
-> 📊 **Full Performance Report:** See [PERFORMANCE_TEST_REPORT.md](./PERFORMANCE_TEST_REPORT.md) for complete analysis, bottleneck identification, optimization recommendations, and cloud migration cost analysis.
+> Raw run logs are kept in
+> [PERFORMANCE_TEST_REPORT.md](./PERFORMANCE_TEST_REPORT.md) for transparency.
+> Treat its older capacity/cost extrapolations as superseded by this section.
 
 ---
 
@@ -428,16 +428,17 @@ This architecture is suitable for:
 
 ## 👨‍💻 About the Developer
 
-Built by **Paul Yang** based on production experience at HUAWEI and enhanced during career transition.
+Maintained by **Paul Yang**. This repository is a learning/portfolio artifact
+built on a tutorial baseline (see *Provenance & Portfolio Scope*); it is not a
+record of employer work. Professional history belongs in a résumé, not here.
 
 - 📧 yangjianing73@gmail.com
 - 💼 [LinkedIn](https://www.linkedin.com/in/paul-yang-30684128a/)
 - 💻 [GitHub](https://github.com/yangjianingpaul)
 
-**Professional Background:**
-- Worked on high-concurrency e-commerce systems at HUAWEI (2021-2022)
-- 5+ years backend engineering experience
-- Specialized in distributed systems and performance optimization
+**Focus:** 5+ years backend engineering (Java / Spring), currently practising a
+characterization-test-first, ADR-documented AI-assisted refactoring workflow —
+this repo is one worked example of that.
 
 ---
 

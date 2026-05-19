@@ -1,5 +1,17 @@
 # Performance Test Report
-## E-Commerce High-Concurrency Caching System
+
+> ⚠️ **SUPERSEDED / SCOPE CORRECTION (2026-05-18).** This document predates the
+> repository's honesty correction. Any framing here as production-grade,
+> enterprise-scale, national-scale, or as HUAWEI production/validated work is
+> **RETRACTED and inaccurate**. This repo is tutorial-derived (hmdp / 黑马点评);
+> see README "Provenance & Portfolio Scope" and the honest "Local Measurements"
+> section there, which supersedes this file. Where numbers here are real they
+> are **local single-machine JMeter measurements only** — not capacity, SLA,
+> daily-user, or cost projections. The Cost Analysis, Enterprise/National
+> capacity, and hardware-scaling tables below are **withdrawn**; do not cite
+> them anywhere outward-facing.
+
+## E-Commerce High-Concurrency Caching System (study project)
 
 **Test Date:** 2025-10-20
 **Project:** Spring Boot E-Commerce Platform with Redis Caching

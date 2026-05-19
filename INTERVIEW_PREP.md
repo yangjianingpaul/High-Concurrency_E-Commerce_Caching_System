@@ -1,5 +1,20 @@
 # Interview Preparation Guide
-## High-Concurrency E-Commerce Caching System
+
+> ⚠️ **HONESTY CORRECTION — READ FIRST (2026-05-18).** This guide previously
+> scripted false claims. Binding rules, overriding anything below:
+> 1. This project is **tutorial-derived** (hmdp / 黑马点评) — present it as a
+>    study/portfolio project, never as a production system you shipped.
+> 2. **Never** attribute this repo to HUAWEI production work. Real prior
+>    experience may be discussed separately and honestly, but it is *not* the
+>    origin of this code, and this code was not deployed/validated at any
+>    employer.
+> 3. Lead with the honest signal: characterization tests, distributed-lock
+>    failure-mode analysis, ADRs (see ADR-0001), correctness-preserving
+>    refactoring, and verified zero-overselling. Throughput/scale numbers are
+>    local single-machine measurements, not capacity claims.
+> Any sentence below that contradicts these rules is retracted.
+
+## High-Concurrency E-Commerce Caching System (study project)
 
 This document prepares you for technical interviews about this project. It includes:
 - Common interview questions with detailed answers
@@ -73,17 +88,27 @@ Load Balancer (Nginx):
 
 **Good Answer (30-second elevator pitch):**
 
-"This is a production-grade high-concurrency e-commerce caching system I built to demonstrate my expertise in distributed systems. It solves three critical problems: cache avalanche, cache penetration, and cache breakdown.
+"This is a study project I built on a well-known Spring Boot + Redis tutorial
+baseline (hmdp / 黑马点评). I used it to practise a disciplined, test-first
+refactoring workflow on real concurrency code — cache avalanche, penetration,
+and breakdown, plus Redis-based distributed locking. The honest contribution
+isn't the original feature set; it's the engineering I layered on: I wrote
+characterization tests to pin actual behaviour, did a failure-mode analysis of
+the hand-rolled Redis lock, and recorded the decision to use Redisson in an ADR.
 
-The system handles 10,000 queries per second for product lookups and 1,000 transactions per second for flash sales with zero overselling. I implemented this using Redis for caching, Lua scripts for atomic operations, and Redis Streams for asynchronous processing.
-
-I validated the performance with JMeter load testing using 2,000 concurrent users and verified zero overselling by comparing database records with Redis operations. The architecture uses 3 Spring Boot instances behind Nginx for high availability."
+On my local machine I load-tested it with JMeter — the cache path stays low-
+latency to about 1,000 threads then saturates, and the seckill path holds
+roughly 1,000 TPS. The result I actually care about is correctness: across about
+30,000 contended requests, zero overselling and zero duplicate orders, verified
+by reconciling database orders against Redis stock."
 
 **Follow-up points to mention if asked:**
-- Based on my experience at HUAWEI working on e-commerce systems
-- Implemented advanced patterns beyond production requirements
-- Full monitoring with Prometheus and Grafana
-- Complete performance testing documentation
+- It's tutorial-derived; the value is the test-first hardening and the ADR-backed
+  reasoning about the lock's failure modes
+- The throughput numbers are local single-machine measurements, not production
+  capacity
+- I can walk through the characterization tests and the Redisson trade-off in
+  detail (ADR-0001 / docs/distributed-lock-failure-modes.md)
 
 ---
 
@@ -863,8 +888,15 @@ Solution: Kill query, add query timeout, educate team on query best practices
 
 **Answer using STAR (Situation, Task, Action, Result):**
 
-**Situation:**
-"During my time at HUAWEI working on an e-commerce platform, we had a product listing page taking 3-5 seconds to load during peak hours. This was causing a 40% bounce rate."
+> ⚠️ **Do not recite the text below as a personal HUAWEI incident.** It is a
+> *structure template only*. Replace it with a genuine optimization story you
+> can defend under hostile follow-up. Do not present this tutorial-derived
+> project, or fabricated metrics, as employer production work.
+
+**Situation (template — substitute a real, defensible example):**
+"[A system I worked on] had a listing page with multi-second load times under
+peak load, hurting conversion." — fill in with specifics you personally owned
+and can defend; do not attribute the tutorial project to an employer.
 
 **Task:**
 "I was tasked with reducing the load time to under 500ms to meet business requirements."
@@ -1322,4 +1354,4 @@ SOLUTION: Implement LRU eviction policy, monitor with Grafana alerts
 
 ---
 
-**Good luck! You've built an impressive project with real production-grade thinking. Show them how you think, not just what you know!** 🚀
+**Good luck! Lead with how you think — the test-first workflow, the failure-mode analysis, and the honest scope of this study project. Defensible beats impressive.** 🚀

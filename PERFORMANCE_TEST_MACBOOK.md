@@ -1,5 +1,11 @@
 # Performance Testing on MacBook - Developer Guide
 
+> ⚠️ **Scope note (2026-05-18).** Tutorial-derived study repo (hmdp / 黑马点评);
+> see README "Provenance & Portfolio Scope". Everything here is **local
+> single-machine** experiment guidance. Any production-grade / enterprise /
+> capacity / cost framing is retracted; the honest README "Local Measurements"
+> section supersedes any such numbers.
+
 **Target Audience:** Developers testing on local MacBook environments
 **Purpose:** Validate functionality, identify bottlenecks, and perform small-scale performance testing
 **Recommended MacBook Specs:** M1/M2/M3 with 16GB+ RAM (8GB minimum)

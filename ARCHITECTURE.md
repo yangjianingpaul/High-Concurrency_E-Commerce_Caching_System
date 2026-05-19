@@ -1,15 +1,21 @@
 # System Architecture Documentation
 
-This document provides detailed architecture diagrams for the High-Concurrency E-Commerce Caching System.
+> ⚠️ **Scope correction (2026-05-18).** This repo is tutorial-derived
+> (hmdp / 黑马点评) — see README "Provenance & Portfolio Scope". The diagrams
+> below are an *illustrative local topology* used for study and local load
+> tests, **not** a deployed or production-validated system, and concurrency/QPS
+> figures are local-machine test inputs, not capacity claims.
+
+This document provides architecture diagrams for the study project.
 
 ---
 
-## 📐 Production Deployment Architecture
+## 📐 Deployment Topology (illustrative — local study setup, not deployed)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         CLIENT LAYER                                │
-│              (2,000+ Concurrent Users / 10,000+ QPS)                │
+│        (local JMeter load generator, single machine)                │
 └────────────────────────────┬────────────────────────────────────────┘
                              │
                              ▼

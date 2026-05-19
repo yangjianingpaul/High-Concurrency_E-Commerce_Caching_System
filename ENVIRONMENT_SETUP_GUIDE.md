@@ -1,4 +1,8 @@
-# Production Environment Setup Guide
+# Local Performance-Test Environment Setup Guide
+
+> ⚠️ Tutorial-derived study repo (hmdp / 黑马点评); see README "Provenance &
+> Portfolio Scope". This sets up a **local** multi-instance test rig for
+> experiments — not a production environment.
 
 **Hardware Configuration:**
 - CPU: Intel Core i5-12600KF (10 cores: 6P-cores + 4E-cores)
@@ -6,7 +10,7 @@
 - Storage: 1TB NVMe M.2 SSD
 - Network: Gigabit Ethernet (assumed)
 
-**Target:** Complete production-grade performance testing environment with remote SSH access from MacBook
+**Target:** A complete local performance-testing environment with remote SSH access from MacBook
 
 **Total Setup Time:** ~2-3 hours
 
@@ -2311,4 +2315,4 @@ Application: http://192.168.1.100:80
 
 ---
 
-**Setup Complete! Your production-grade performance testing environment is ready!** 🎉
+**Setup Complete! Your local performance-testing environment is ready!** 🎉

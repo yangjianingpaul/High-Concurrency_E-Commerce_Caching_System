@@ -1,5 +1,13 @@
 # Performance Metrics Cheat Sheet
-## Quick Reference for Interviews
+
+> ⚠️ **SCOPE CORRECTION (2026-05-18).** Tutorial-derived study repo
+> (hmdp / 黑马点评); see README "Provenance & Portfolio Scope". Numbers here are
+> **local single-machine JMeter** results, not validated production capacity.
+> In interviews, present this as a study/portfolio project and lead with the
+> honest signal: **characterization tests, failure-mode analysis, ADRs, and
+> verified zero-overselling correctness** — not throughput or scale claims.
+
+## Quick Reference (study project)
 
 Print this out and review before interviews! All numbers are from actual testing.
 
@@ -129,7 +137,7 @@ Test Data:
 ### "What's the performance of your system?"
 
 **30-second answer:**
-"The system handles 10,000 cache queries per second with 1-2ms latency, and 1,000 flash sale transactions per second with sub-millisecond response time. I validated this with JMeter using 2,000 concurrent users across 385,000 total requests with zero errors. I also verified zero overselling by comparing 29,957 database orders against 29,956 Redis stock deductions - perfect accuracy."
+"This is a study project built on a well-known tutorial baseline; I used it to practise a characterization-test-first refactoring workflow. On my local machine, JMeter runs showed the cache path staying ~1-2ms up to ~1,000 threads before saturating, and the seckill path holding ~1,000 TPS. The result I actually care about is correctness: across ~30,000 contended requests there was no overselling and no duplicate orders, verified by reconciling DB orders against Redis stock. I don't present the throughput numbers as production capacity — they're single-machine measurements."
 
 ### "How does your seckill prevent overselling?"
 
