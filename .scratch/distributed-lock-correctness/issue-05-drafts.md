@@ -129,8 +129,11 @@ That sentence contains zero AI language and loses none of the signal. **Pass.**
 
 ## 6. Open item for the user before publishing (non-blocking)
 
-The technical slice is in the working tree but **not yet committed** (`git log`
-shows no ADR/failure-mode/MutexRedisLockTest commit). Both assets reference the
-ADR/tests/commits; commit and push the slice so the public links resolve before
-either asset is used externally. This is a publish-time prerequisite, owned by
-the user — not part of this drafts-only issue.
+The technical slice has been **committed and pushed** at `e9fae93`
+(`test(lock): characterize MutexRedisLock failure modes and Redisson ADR`;
+HEAD == origin/main). The ADR, failure-mode map, and `MutexRedisLockTest`
+referenced by both assets are in that commit, so the public links will resolve
+once repo visibility is set. The remaining publish step, owned by the user, is
+to confirm repo visibility (public) and fill the actual LinkedIn comment URLs
+(Comment-1 in §2). This drafts file (`issue-05-drafts.md`) is internal working
+material and must not itself be linked as an outward-facing portfolio asset.
